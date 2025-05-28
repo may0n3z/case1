@@ -27,10 +27,15 @@
         </Style>
     </Window.Resources>
 
-    <Grid Background="Black" ClipToBounds="True">
+    <Grid Background="Black">
         <Canvas Background="LightGoldenrodYellow" Margin="10,10,220,10" MouseLeftButtonDown="Canvas_MouseLeftButtonDown">
             <Path Stroke="Yellow" StrokeThickness="3" Data="{Binding PathGeometry}" />
             <ItemsControl ItemsSource="{Binding Points}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <Canvas />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemContainerStyle>
                     <Style>
                         <Setter Property="Canvas.Left" Value="{Binding X}" />
@@ -40,14 +45,14 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <StackPanel>
-                            <Ellipse Width="20" Height="20" Fill="Black" Stroke="Black" StrokeThickness="1" />
-                            <TextBlock Text="" FontWeight="Bold" Foreground="Black" .HorizontalAlignment="Center" Margin="0,2,0,0" />
+                            <Ellipse Width="20" Height="20" Fill="Gray" Stroke="Black" StrokeThickness="1" />
+                            <TextBlock  FontWeight="Bold" Foreground="Black" HorizontalAlignment="Center"  />
                         </StackPanel>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </Canvas>
-        <Button x:Name="Get1Order" Content="Несколько заказов в центре" Margin="0,10,10,0" />
+        <Button x:Name="Get1Order" Content="Несколько заказов в центре" Margin="0,10,10,0" Click="Get1Order_Click" />
         <Button x:Name="Get2Order" Content="Больше заказов, немного дальше от центра" Margin="0,50,10,0"/>
         <Button x:Name="Get3Order" Content="Заказы в одном районе" Margin="0,90,10,0"/>
         <Button x:Name="Get4Order" Content="Заказы в разных частях города" Margin="0,130,10,0"/>

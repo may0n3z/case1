@@ -13,6 +13,7 @@ using BestDelivery;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using BestDelivery;
 
 namespace case1
 {
@@ -39,6 +40,12 @@ namespace case1
 
             // Добавляем новую точку с уникальным именем
             vm.AddPoint(new DeliveryPoint($"Точка {_pointCounter++}", pos.X - 10, pos.Y - 10));
+        }
+
+        private void Get1Order_Click(object sender, RoutedEventArgs e)
+        {
+            BestDelivery.OrderArrays.GetOrderArray1();
+
         }
 
         //public static void MathMetod()

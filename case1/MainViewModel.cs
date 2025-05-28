@@ -18,6 +18,16 @@ namespace case1
 
         public MainViewModel()
         {
+            Points = new ObservableCollection<DeliveryPoint>
+            {
+                new DeliveryPoint("Точка 1", 50, 50),
+                new DeliveryPoint("Точка 2", 200, 80),
+                new DeliveryPoint("Точка 3", 350, 150),
+                new DeliveryPoint("Точка 4", 300, 250),
+                new DeliveryPoint("Точка 5", 100, 200),
+            };
+
+            UpdatePath();
             Points.CollectionChanged += (s, e) => UpdatePath();
         }
 
