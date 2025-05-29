@@ -64,7 +64,5 @@
             <TextBox x:Name="WeightLenght" HorizontalAlignment="Left" Margin="0,0,0,10" TextWrapping="Wrap" Background="White" FontSize="14" VerticalAlignment="Top" Width="200" Height="40"/>
             <Button x:Name="NewPath" Content="Пересчитать маршрут"  Margin="0,0,0,10" Click="NewPath_Click"/>
         </StackPanel>
-        <TextBox x:Name="testbox1" HorizontalAlignment="Left" Margin="931,742,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120"/>
-
     </Grid>
 </Window>
