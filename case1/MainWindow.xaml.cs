@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Data;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -13,6 +14,7 @@ using BestDelivery;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using BestDelivery;
 
 namespace case1
 {
@@ -20,138 +22,131 @@ namespace case1
     /// Interaction logic for MainWindow.Xaml
     /// </summary>
     /// 
-    public class Order
-    {
-        public int ID { get; set; }
-        public Point Destination { get; set; }
-        public double Priority { get; set; }
-    }
-    public class Point
-    {
-        public double X { get; set; }
-        public double Y { get; set; }
-    }
+
     public partial class MainWindow : Window
     {
+        private int _pointCounter = 1;
         public MainWindow()
         {
             InitializeComponent();
+
+        }
+
+        private void Canvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            
+
+            var vm = MainViewModel.Instance;
+            var canvas = sender as Canvas;
+            if (canvas == null) return;
+
+            // Получаем позицию клика относительно Canvas
+            System.Windows.Point clickPos = e.GetPosition(canvas);
+
+            // Обратное масштабирование: преобразуем координаты Canvas в "географические"
+            double lat = vm.InverseScaleY(clickPos.Y);
+            double lon = vm.InverseScaleX(clickPos.X);
+            // Добавляем новую точку
+            vm.AddPoint(new DeliveryPoint(lat, lon));
+        }
+        private void GetOrder_Click(object sender, RoutedEventArgs e)
+        {
+            var vm = MainViewModel.Instance;
+            var button = sender as Button;
+            if (button == null) return;
+            
+            int orderNumber;
+            if (!int.TryParse(button.Tag?.ToString(), out orderNumber)) return;
+
+            Order[] orders = orderNumber switch
+            {
+                1 => OrderArrays.GetOrderArray1(),
+                2 => OrderArrays.GetOrderArray2(),
+                3 => BestDelivery.OrderArrays.GetOrderArray3(),
+                4 => BestDelivery.OrderArrays.GetOrderArray4(),
+                5 => BestDelivery.OrderArrays.GetOrderArray5(),
+                6 => BestDelivery.OrderArrays.GetOrderArray6(),
+                
+            };
+            PathLenght.Text = "";
+
+            
             CalculateRoute cr = new CalculateRoute();
+            List<int> ordersRoute = cr.GetMinOrdersPatch(orders);
+            var depot = orders[0].Destination;
 
-            // Получаем массив из BestDelivery
-            var bestDeliveryOrders = BestDelivery.OrderArrays.GetOrderArray1();
-
-            // Преобразуем в case1.Order[]
-            var orders = bestDeliveryOrders
-                .Select(o => new case1.Order
-                {
-                    ID = o.ID,
-                    Destination = new case1.Point { X = o.Destination.X, Y = o.Destination.Y },
-                    Priority = o.Priority
-                })
-                .ToArray();
-
-            // Теперь можно передать в метод
-            var (path, cost) = cr.FindMinRoute(orders);
-
-            MessageBox.Show($"Минимальный маршрут: {string.Join(" → ", path.Select(o => o.ID))}\nСтоимость: {cost}");
-        }
-    }
-    public class CalculateRoute
-    {
-        public (List<Order> path, double totalCost) FindMinRoute(Order[] orders)
-        {
-            // Найти стартовую точку (ID = -1)
-            var start = orders.First(o => o.ID == -1);
-            var others = orders.Where(o => o.ID != -1).ToList();
-
-            // Все возможные перестановки остальных точек
-            var permutations = GetPermutations(others, others.Count);
-
-            List<Order> bestPath = null;
-            double minCost = double.MaxValue;
-
-            foreach (var perm in permutations)
+            WeightLenght.Text = BestDelivery.RoutingTestLogic.CalculateRouteCost(ordersRoute, orders.ToList(), depot).ToString();
+            foreach (var item in ordersRoute)
             {
-                var path = new List<Order> { start };
-                path.AddRange(perm);
-                path.Add(start); // Возвращаемся в начало
-
-                double cost = CalculatePathCost(path);
-
-                if (cost < minCost)
-                {
-                    minCost = cost;
-                    bestPath = path;
-                }
+                PathLenght.Text += "Точка "+item.ToString() +"\n";
             }
-
-            return (bestPath, minCost);
-        }
-
-        private double CalculatePathCost(List<Order> path)
-        {
-            double cost = 0;
-            double a = 0.5;
-
-            for (int i = 0; i < path.Count - 1; i++)
+            if (orders == null) return;
+            vm.Points.Clear(); // очищаем старые точки
+            foreach (var order in orders)
             {
-                var dist = CalculateDistance(path[i].Destination, path[i + 1].Destination);
-                var priorityFactor = 1 + a * (path[i].Priority + path[i + 1].Priority) / 2.0;
-                cost += dist * priorityFactor;
+                vm.AddPoint(new DeliveryPoint(order.Destination.X, order.Destination.Y));
             }
-
-            return cost;
         }
 
-        private double CalculateDistance(Point p1, Point p2)
-        {
-            // Здесь ваша реализация расстояния (например, евклидово)
-            double dx = p1.X - p2.X;
-            double dy = p1.Y - p2.Y;
-            return Math.Sqrt(dx * dx + dy * dy);
-        }
 
-        // Генератор всех перестановок списка
-        private static IEnumerable<List<Order>> GetPermutations(List<Order> list, int length)
-        {
-            if (length == 1) return list.Select(t => new List<Order> { t });
-
-            return GetPermutations(list, length - 1)
-                .SelectMany(t => list.Where(e => !t.Contains(e)),
-                    (t1, t2) => t1.Concat(new List<Order> { t2 }).ToList());
-        }
     }
-
-
-
-    //class CalculateRoute
-    //{
-    //    public double GetMinOrdersPatch(Order[] orders)
-    //    {
-    //        double a = 0.5;
-    //        List<double> cost = new List<double>();
-    //        int n = orders.Length;
-
-    //        for (int i = 0; i < n; i++)
-    //        {
-    //            for (int j = i + 1; j < n; j++)
-    //            {
-    //                // Расстояние между i и j
-    //                double dist = BestDelivery.RoutingTestLogic.CalculateDistance(orders[i].Destination, orders[j].Destination);
-
-    //                // Учитываем приоритеты обеих точек (например, среднее или сумму)
-    //                // В вашем коде учитывался приоритет только orders[i], можно сделать так:
-    //                double priorityFactor = 1 + a * (orders[i].Priority + orders[j].Priority) / 2.0;
-
-    //                cost.Add(dist * priorityFactor);
-    //            }
-    //        }
-    //        if (cost.Count == 0)
-    //            return 0; // или другое значение, если нет ребер
-
-    //        return cost.Min();
-    //    }
-
-    //}
 }
+
+    class CalculateRoute
+    {
+        public List<int> GetMinOrdersPatch(Order[] orders)
+        {
+            double a = 0.5;
+            int n = orders.Length;
+
+            if (n == 0) return (new List<int>());
+
+            HashSet<int> unvisited = new HashSet<int>(Enumerable.Range(1, n - 1));
+            int current = 0;
+            double totalCost = 0;
+
+            List<int> route = new List<int> { orders[current].ID }; // начинаем маршрут с ID стартового заказа
+
+            while (unvisited.Count > 0)
+            {
+                double minCost = double.MaxValue;
+                int nextVertex = -1;
+
+                foreach (int candidate in unvisited)
+                {
+                    double dist = BestDelivery.RoutingTestLogic.CalculateDistance(orders[current].Destination, orders[candidate].Destination);
+                    double priorityFactor = 1 + a * (orders[current].Priority + orders[candidate].Priority) / 2.0;
+                    double cost = dist * priorityFactor;
+
+                    if (cost < minCost)
+                    {
+                        minCost = cost;
+                        nextVertex = candidate;
+                    }
+                }
+
+                if (nextVertex == -1)
+                {
+                    break;
+                }
+
+                totalCost += minCost;
+                current = nextVertex;
+                unvisited.Remove(nextVertex);
+                route.Add(orders[current].ID); // добавляем ID следующего заказа в маршрут
+            }
+
+            // Возврат к стартовой вершине
+            if (n > 1)
+            {
+                double distBack = BestDelivery.RoutingTestLogic.CalculateDistance(orders[current].Destination, orders[0].Destination);
+                double priorityFactorBack = 1 + a * (orders[current].Priority + orders[0].Priority) / 2.0;
+                totalCost += distBack * priorityFactorBack;
+
+                route.Add(orders[0].ID); // добавляем в конец маршрут возврат к старту
+            }
+            return route;
+        }
+ 
+    }
+

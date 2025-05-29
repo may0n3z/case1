@@ -5,10 +5,61 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:case1"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        <TextBox x:Name="testbox" HorizontalAlignment="Left" Margin="400,217,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120"/>
+        Title="MainWindow" Height="800" Width="1100">
+    <Window.DataContext>
+        <local:MainViewModel/>
+    </Window.DataContext>
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="Yellow"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Top"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Width" Value="200"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="ContentTemplate">
+                <Setter.Value>
+                    <DataTemplate>
+                        <TextBlock TextWrapping="Wrap" Text="{Binding}"/>
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
 
+    <Grid Background="Black">
+        <Canvas x:Name="graph" Background="White" Width="800" Height="700" MouseLeftButtonDown="Canvas_MouseLeftButtonDown" HorizontalAlignment="Left" Margin="20" >
+            <Path Stroke="Yellow" StrokeThickness="3" Data="{Binding PathGeometry}" />
+            <ItemsControl ItemsSource="{Binding Points}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <Canvas />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemContainerStyle>
+                    <Style TargetType="ContentPresenter">
+                        <Setter Property="Canvas.Left" Value="{Binding CanvasX}" />
+                        <Setter Property="Canvas.Top" Value="{Binding CanvasY}" />
+                    </Style>
+                </ItemsControl.ItemContainerStyle>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Ellipse Width="10" Height="10" Fill="Gray" Stroke="Black" StrokeThickness="1" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Canvas>
+
+        <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,42,38,0" Width="200" >
+            <Button Content="Заказы в разных частях города" Tag="4" Click="GetOrder_Click" Margin="0,0,0,10"/>
+            <Button Content="Больше заказов, немного дальше от центра" Tag="2" Click="GetOrder_Click" Margin="0,0,0,10"/>
+            <Button Content="Заказы в одном районе" Tag="3" Click="GetOrder_Click" Margin="0,0,0,10"/>
+            <Button Content="Несколько заказов с разным приоритетом" Tag="5" Click="GetOrder_Click" Margin="0,0,0,10"/>
+            <Button Content="Много заказов" Tag="6" Click="GetOrder_Click" Margin="0,0,0,10" />
+            <Button Content="Несколько заказов в центре" Tag="1" Click="GetOrder_Click" Margin="0,0,0,10"/>
+            <TextBox x:Name="PathLenght" HorizontalAlignment="Left" Margin="0,0,0,10" TextWrapping="Wrap" Background="White" FontSize="14" VerticalAlignment="Top" Width="200" Height="230"/>
+            <TextBox x:Name="WeightLenght" HorizontalAlignment="Left" Margin="0,0,0,10" TextWrapping="Wrap" Background="White" FontSize="14" VerticalAlignment="Top" Width="200" Height="40"/>
+        </StackPanel>
+        
     </Grid>
 </Window>
-    
