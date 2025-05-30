@@ -8,11 +8,8 @@ namespace case1
     /// <summary>
     /// Interaction logic for MainWindow.Xaml
     /// </summary>
-    /// 
-
     public partial class MainWindow : Window
     {
-        //private int _pointCounter = 1;
         public MainWindow()
         {
             InitializeComponent();
@@ -22,7 +19,16 @@ namespace case1
             var vm = MainViewModel.Instance;
             var canvas = sender as Canvas;
             if (canvas == null) return;
-
+            int id = 0;
+            var idChek = graph.DataContext as MainViewModel; // или ваш конкретный тип ViewModel
+            if (idChek != null)
+            {
+                int pointsCount = vm.Points.Count;
+                for (int i = 0; i < pointsCount; i++)
+                {
+                    id++;
+                }
+            }
             // Получаем позицию клика относительно Canvas
             System.Windows.Point clickPos = e.GetPosition(canvas);
 
@@ -30,8 +36,7 @@ namespace case1
             double lat = vm.InverseScaleY(clickPos.Y);
             double lon = vm.InverseScaleX(clickPos.X);
             // Добавляем новую точку
-            vm.AddPoint(new DeliveryPoint(lat, lon));
-
+            vm.AddPoint(new DeliveryPoint(lat ,lon, 0, id));
         }
         private void GetOrder_Click(object sender, RoutedEventArgs e)
         {
@@ -51,7 +56,6 @@ namespace case1
             };
             PathLenght.Text = "";
             Order[] ordersNew = orders.Skip(1).ToArray();
-
             CalculateRoute cr = new CalculateRoute();
             List<int> ordersRoute = cr.GetMinOrdersPatch(orders);
             var depot = orders[0].Destination;
@@ -64,22 +68,20 @@ namespace case1
             vm.Points.Clear(); // очищаем старые точки
             foreach (var order in orders)
             {
-                vm.AddPoint(new DeliveryPoint(order.Destination.X, order.Destination.Y));
+                vm.AddPoint(new DeliveryPoint(order.Destination.X, order.Destination.Y, order.Priority, order.ID));
             }
         }
-
         private void NewPath_Click(object sender, RoutedEventArgs e)
         {
-            //CalculateRoute cr = new CalculateRoute();
-            //if (this.DataContext is MainViewModel vm)
-            //{
-            //    Order[] orders = vm.Points
-            //        .Select(point => new Order {}).ToArray();
-            //    List<int> ordersRoute = cr.GetMinOrdersPatch(orders);
-            //    Order[] ordersNew = orders.Skip(1).ToArray();
-            //    var depot = orders[0].Destination;
-            //    WeightLenght.Text = BestDelivery.RoutingTestLogic.CalculateRouteCost(ordersRoute, ordersNew.ToList(), depot).ToString();
-            //}
+            CalculateRoute cr = new CalculateRoute();
+            if (this.DataContext is MainViewModel vm)
+            {
+                Order[] orders = vm.Points.Select(point => new BestDelivery.Order { }).ToArray();
+                List<int> ordersRoute = cr.GetMinOrdersPatch(orders);
+                Order[] ordersNew = orders.Skip(1).ToArray();
+                var depot = orders[0].Destination;
+                WeightLenght.Text = BestDelivery.RoutingTestLogic.CalculateRouteCost(ordersRoute, ordersNew.ToList(), depot).ToString();
+            }
         }
     }
     class CalculateRoute
