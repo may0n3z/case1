@@ -5,9 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:case1"
         mc:Ignorable="d"
-        Title="MainWindow" Height="600" Width="1000">
+        Title="MainWindow" Height="800" Width="1100">
     <Window.DataContext>
-        <local:MainViewModel />
+        <local:MainViewModel/>
     </Window.DataContext>
     <Window.Resources>
         <Style TargetType="Button">
@@ -28,7 +28,7 @@
     </Window.Resources>
 
     <Grid Background="Black">
-        <Canvas Background="LightGoldenrodYellow" Margin="10,10,220,10" MouseLeftButtonDown="Canvas_MouseLeftButtonDown">
+        <Canvas x:Name="graph" Background="White" Width="800" Height="700" MouseLeftButtonDown="Canvas_MouseLeftButtonDown" HorizontalAlignment="Left" Margin="20" >
             <Path Stroke="Yellow" StrokeThickness="3" Data="{Binding PathGeometry}" />
             <ItemsControl ItemsSource="{Binding Points}">
                 <ItemsControl.ItemsPanel>
@@ -37,27 +37,30 @@
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemContainerStyle>
-                    <Style>
-                        <Setter Property="Canvas.Left" Value="{Binding X}" />
-                        <Setter Property="Canvas.Top" Value="{Binding Y}" />
+                    <Style TargetType="ContentPresenter">
+                        <Setter Property="Canvas.Left" Value="{Binding CanvasX}" />
+                        <Setter Property="Canvas.Top" Value="{Binding CanvasY}" />
                     </Style>
                 </ItemsControl.ItemContainerStyle>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel>
-                            <Ellipse Width="20" Height="20" Fill="Gray" Stroke="Black" StrokeThickness="1" />
-                            <TextBlock  FontWeight="Bold" Foreground="Black" HorizontalAlignment="Center"  />
-                        </StackPanel>
+                        <Ellipse Width="10" Height="10" Fill="Gray" Stroke="Black" StrokeThickness="1" />
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </Canvas>
-        <Button x:Name="Get1Order" Content="Несколько заказов в центре" Margin="0,10,10,0" Click="Get1Order_Click" />
-        <Button x:Name="Get2Order" Content="Больше заказов, немного дальше от центра" Margin="0,50,10,0"/>
-        <Button x:Name="Get3Order" Content="Заказы в одном районе" Margin="0,90,10,0"/>
-        <Button x:Name="Get4Order" Content="Заказы в разных частях города" Margin="0,130,10,0"/>
-        <Button x:Name="Get5Order" Content="Несколько заказов с разным приоритетом" Margin="0,170,10,0"/>
-        <Button x:Name="Get6Order" Content="Много заказов" Margin="0,210,10,0"/>
+
+        <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,42,38,0" Width="200" >
+            <Button Content="Заказы в разных частях города" Tag="4" Click="GetOrder_Click" Margin="0,0,0,10"/>
+            <Button Content="Больше заказов, немного дальше от центра" Tag="2" Click="GetOrder_Click" Margin="0,0,0,10"/>
+            <Button Content="Заказы в одном районе" Tag="3" Click="GetOrder_Click" Margin="0,0,0,10"/>
+            <Button Content="Несколько заказов с разным приоритетом" Tag="5" Click="GetOrder_Click" Margin="0,0,0,10"/>
+            <Button Content="Много заказов" Tag="6" Click="GetOrder_Click" Margin="0,0,0,10" />
+            <Button Content="Несколько заказов в центре" Tag="1" Click="GetOrder_Click" Margin="0,0,0,10"/>
+            <TextBox x:Name="PathLenght" HorizontalAlignment="Left" Margin="0,0,0,10" TextWrapping="Wrap" Background="White" FontSize="14" VerticalAlignment="Top" Width="200" Height="230"/>
+            <TextBox x:Name="WeightLenght" HorizontalAlignment="Left" Margin="0,0,0,10" TextWrapping="Wrap" Background="White" FontSize="14" VerticalAlignment="Top" Width="200" Height="40"/>
+            <Button x:Name="NewPath" Content="Пересчитать маршрут"  Margin="0,0,0,10" Click="NewPath_Click"/>
+        </StackPanel>
+        
     </Grid>
 </Window>
-    

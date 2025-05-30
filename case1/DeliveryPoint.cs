@@ -1,42 +1,31 @@
 ﻿using System.ComponentModel;
 
-namespace case1
+public class DeliveryPoint : INotifyPropertyChanged
 {
-    public class DeliveryPoint : INotifyPropertyChanged
+    public double X { get; } // Исходная широта
+    public double Y { get; } // Исходная долгота
+
+    private double _canvasX;
+    public double CanvasX
     {
-        private double _x;
-        private double _y;
-        private string _name;
-
-        public double X
-        {
-            get => _x;
-            set { _x = value; OnPropertyChanged(nameof(X)); }
-        }
-
-        public double Y
-        {
-            get => _y;
-            set { _y = value; OnPropertyChanged(nameof(Y)); }
-        }
-
-        public string Name
-        {
-            get => _name;
-            set { _name = value; OnPropertyChanged(nameof(Name)); }
-        }
-
-        public DeliveryPoint(string name, double x, double y)
-        {
-            Name = name;
-            X = x;
-            Y = y;
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged(string propName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
-        }
+        get => _canvasX;
+        set { _canvasX = value; OnPropertyChanged(nameof(CanvasX)); }
     }
+
+    private double _canvasY;
+    public double CanvasY
+    {
+        get => _canvasY;
+        set { _canvasY = value; OnPropertyChanged(nameof(CanvasY)); }
+    }
+
+    public DeliveryPoint(double x, double y)
+    {
+        X = x;
+        Y = y;
+
+    }
+    public event PropertyChangedEventHandler PropertyChanged;
+    protected void OnPropertyChanged(string propName) =>
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
 }
