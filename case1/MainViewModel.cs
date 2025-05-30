@@ -28,6 +28,7 @@ namespace case1
         {
             Points = new ObservableCollection<DeliveryPoint>
             {
+
             };
             Instance = this;
             UpdatePath();
@@ -61,7 +62,7 @@ namespace case1
         }
 
 
-        private void UpdateScaledPointsAndPath()
+        public void UpdateScaledPointsAndPath()
         {
             if (Points.Count == 0)
             {
@@ -83,6 +84,10 @@ namespace case1
             for (int i = 1; i < scaledPoints.Count; i++)
             {
                 figure.Segments.Add(new LineSegment(scaledPoints[i], true));
+            }
+            for (int i = 1; i < scaledPoints.Count; i++)
+            {
+                figure.Segments.Add(new LineSegment(scaledPoints[0], true));
             }
 
             var geometry = new PathGeometry();
@@ -112,7 +117,7 @@ namespace case1
         }
 
 
-        private void UpdatePath()
+        public void UpdatePath()
         {
             if (Points.Count == 0)
             {
@@ -130,7 +135,13 @@ namespace case1
             for (int i = 1; i < Points.Count; i++)
             {
                 figure.Segments.Add(new LineSegment(new Point(Points[i].X , Points[i].Y ), true));
-            }         
+            }
+            if (Points.Count > 1)
+            {
+                figure.Segments.Add(new LineSegment(new Point(Points[0].X, Points[0].Y), true));
+            }
+
+
             var geometry = new PathGeometry();
             geometry.Figures.Add(figure);
             
