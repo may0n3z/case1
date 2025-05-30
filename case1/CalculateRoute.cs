@@ -14,10 +14,25 @@ namespace case1
             int n = orders.Length;
             if (n == 0) return new List<int>();
             if (n == 1) return new List<int> { orders[0].ID, orders[0].ID };
+
             double[,] dist = new double[n, n];
             for (int i = 0; i < n; i++)
+            {
                 for (int j = 0; j < n; j++)
-                    dist[i, j] = (i == j) ? 0 : BestDelivery.RoutingTestLogic.CalculateDistance(orders[i].Destination, orders[j].Destination);
+                {
+                    if (i == j)
+                    {
+                        dist[i, j] = 0;
+                    }
+                    else
+                    {
+                        double baseDist = BestDelivery.RoutingTestLogic.CalculateDistance(orders[i].Destination, orders[j].Destination);
+                        double priorityFactor = (orders[i].Priority + orders[j].Priority) / 2.0;
+                        dist[i, j] = baseDist / (1 + priorityFactor);
+                    }
+                }
+            }
+
             var mstEdges = BuildMST(dist, n);
             var oddVertices = FindOddDegreeVertices(mstEdges, n);
             var matchingEdges = MinimumWeightPerfectMatching(oddVertices, dist);
