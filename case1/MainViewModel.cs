@@ -5,6 +5,7 @@ using System.Windows;
 
 namespace case1
 {
+    
     public class MainViewModel : INotifyPropertyChanged
     {
         public ObservableCollection<DeliveryPoint> Points { get; set; } = new();
@@ -146,6 +147,7 @@ namespace case1
             geometry.Figures.Add(figure);
             
             PathGeometry = geometry;
+
         }
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged(string propName)

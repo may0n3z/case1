@@ -44,7 +44,10 @@
                 </ItemsControl.ItemContainerStyle>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Ellipse Width="10" Height="10" Fill="Gray" Stroke="Black" StrokeThickness="1" />
+                        <StackPanel>
+                            <Ellipse Width="10" Height="10" Fill="Gray" Stroke="Black" StrokeThickness="1"/>
+                            <TextBlock Text="{Binding ID}" FontWeight="Bold" Foreground="Black" HorizontalAlignment="Center" Margin="0,2,0,0" />
+                        </StackPanel>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>

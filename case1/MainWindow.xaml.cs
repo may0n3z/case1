@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -22,24 +23,14 @@ namespace case1
             var vm = MainViewModel.Instance;
             var canvas = sender as Canvas;
             if (canvas == null) return;
-            int id = 0;
-            var idChek = graph.DataContext as MainViewModel; // или ваш конкретный тип ViewModel
-            if (idChek != null)
-            {
-                int pointsCount = vm.Points.Count;
-                for (int i = 0; i < pointsCount; i++)
-                {
-                    id++;
-                }
-            }
+            double id = vm.Points.Count > 0 ? vm.Points.Max(p => p.ID) + 1 : 0;
             // Получаем позицию клика относительно Canvas
             System.Windows.Point clickPos = e.GetPosition(canvas);
-
             // Обратное масштабирование: преобразуем координаты Canvas в "географические"
             double lat = vm.InverseScaleY(clickPos.Y);
             double lon = vm.InverseScaleX(clickPos.X);
             // Добавляем новую точку
-            vm.AddPoint(new DeliveryPoint(lat ,lon, 0.5, id));
+            vm.Points.Add(new DeliveryPoint(lat ,lon, 0.5, id));
             NewPatch();
         }
 
@@ -86,8 +77,9 @@ namespace case1
             vm.Points.Clear(); // очищаем старые точки
             foreach (var order in orders)
             {
-                vm.AddPoint(new DeliveryPoint(order.Destination.X, order.Destination.Y, order.Priority, order.ID));
+                vm.AddPoint(new DeliveryPoint(order.Destination.X, order.Destination.Y, order.Priority, order.ID));               
             }
+            NewPatch();
         }
         private void NewPath_Click(object sender, RoutedEventArgs e)
         {
@@ -95,8 +87,8 @@ namespace case1
         }
         public void NewPatch()
         {
-            
-            if (this.DataContext is MainViewModel vm)              
+
+            if (this.DataContext is MainViewModel vm)
             {
                 Order[] orders = vm.Points.Select(static point => new BestDelivery.Order
                 {
@@ -110,16 +102,8 @@ namespace case1
             }
         }
 
-
-
         void updatelines(List<int> route, ObservableCollection<DeliveryPoint> points)
         {
-            if (points == null || points.Count < 2)
-            {
-                // Если коллекция пустая или содержит только один элемент, ничего не делаем
-                return;
-            }
-
             // Создаем копию исходной коллекции
             var oldpoints = new ObservableCollection<DeliveryPoint>(points);
             var vm = MainViewModel.Instance;
@@ -136,22 +120,13 @@ namespace case1
                     oldpoints[0].Priority,
                     oldpoints[0].ID));
             }
-
-            // Переставляем промежуточные элементы в соответствии с route
-            for (int i = 0; i < route.Count; i++)
+            for (int i = 1; i < route.Count; i++)
             {
-                int index = route[i];
-                if (index > 0 && index < oldpoints.Count - 1)
+                int id = route[i];
+                var point = oldpoints.FirstOrDefault(p => p.ID == id);
+                if (point != null && point != oldpoints.First() && point != oldpoints.Last())
                 {
-                    vm.AddPoint(new DeliveryPoint(
-                        oldpoints[index].X,
-                        oldpoints[index].Y,
-                        oldpoints[index].Priority,
-                        oldpoints[index].ID));
-                }
-                else
-                {
-                    continue;
+                    vm.AddPoint(new DeliveryPoint(point.X, point.Y, point.Priority, point.ID));
                 }
             }
 
@@ -208,7 +183,10 @@ namespace case1
                 totalCost += distBack * priorityFactorBack;
                 route.Add(orders[0].ID); // добавляем в конец маршрут возврат к старту
             }
+            
             return route;
+            
         }
+
     }
 }
