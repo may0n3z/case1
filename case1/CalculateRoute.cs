@@ -40,20 +40,15 @@ namespace case1
                 parent[i] = -1;
             }
             key[0] = 0;
-
-            for (int count = 0; count < n - 1; count++)
+            var pq = new PriorityQueue<int, double>();
+            for (int i = 0; i < n; i++)
             {
-                int u = -1;
-                double minKey = double.MaxValue;
-                for (int v = 0; v < n; v++)
-                {
-                    if (!inMST[v] && key[v] < minKey)
-                    {
-                        minKey = key[v];
-                        u = v;
-                    }
-                }
+                pq.Enqueue(i, key[i]);
+            }
 
+            while (pq.Count > 0)
+            {
+                int u = pq.Dequeue();
                 inMST[u] = true;
 
                 for (int v = 0; v < n; v++)
@@ -62,15 +57,14 @@ namespace case1
                     {
                         key[v] = dist[u, v];
                         parent[v] = u;
+                        pq.Enqueue(v, key[v]);
                     }
                 }
             }
-
             for (int v = 1; v < n; v++)
             {
                 mstEdges.Add((parent[v], v));
             }
-
             return mstEdges;
         }
         private List<int> FindOddDegreeVertices(List<(int, int)> edges, int n)
@@ -184,5 +178,5 @@ namespace case1
             }
             return path;
         }
-    }
+    }     
 }
