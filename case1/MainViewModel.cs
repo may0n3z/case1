@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Media;
 using System.Windows;
+using BestDelivery;
 
 namespace case1
 {
@@ -72,7 +73,7 @@ namespace case1
             }
 
 
-            var scaledPoints = Points.Select(p => new Point(ScaleX(p.Y), ScaleY(p.X))).ToList();
+            var scaledPoints = Points.Select(p => new System.Windows.Point(ScaleX(p.Y), ScaleY(p.X))).ToList();
 
 
             var figure = new PathFigure
@@ -127,18 +128,18 @@ namespace case1
 
             var figure = new PathFigure
             {
-                StartPoint = new Point(Points[0].X, Points[0].Y ),
+                StartPoint = new System.Windows.Point(Points[0].X, Points[0].Y ),
                 IsClosed = false,
                 IsFilled = false
             };
 
             for (int i = 1; i < Points.Count; i++)
             {
-                figure.Segments.Add(new LineSegment(new Point(Points[i].X , Points[i].Y ), true));
+                figure.Segments.Add(new LineSegment(new System.Windows.Point(Points[i].X , Points[i].Y ), true));
             }
             if (Points.Count > 1)
             {
-                figure.Segments.Add(new LineSegment(new Point(Points[0].X, Points[0].Y), true));
+                figure.Segments.Add(new LineSegment(new System.Windows.Point(Points[0].X, Points[0].Y), true));
             }
 
 
@@ -147,7 +148,10 @@ namespace case1
             
             PathGeometry = geometry;
 
+
+
         }
+
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged(string propName)
         {
