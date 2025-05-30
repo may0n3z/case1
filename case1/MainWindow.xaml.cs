@@ -38,7 +38,7 @@ namespace case1
             PriorityInputDialog priorityInputDialog = new PriorityInputDialog();
             if (priorityInputDialog.ShowDialog() == true)
             {
-                priority = Convert.ToDouble(priorityInputDialog.InputValue);
+                priority = priorityInputDialog.Priority;
                 
             }
             else
@@ -152,7 +152,7 @@ namespace case1
         private TextBox inputTextBox;
         private Button okButton;
         public string InputValue => inputTextBox.Text;
-        public double? Priority { get; private set; } = null;
+        public double Priority { get; private set; } = 0;
         public PriorityInputDialog()
         {
             this.Title = "Введите приоритет";
@@ -187,9 +187,9 @@ namespace case1
 
             this.Content = panel;
         }
-        private void OkButton_Click(object sender, RoutedEventArgs e)
+        private void OkButton_Click(object sender, RoutedEventArgs e) 
         {
-            if (double.TryParse(inputTextBox.Text.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double value))
+            if (double.TryParse(inputTextBox.Text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double value))
             {
                 if (value >= 0.0 && value <= 1.0)
                 {
