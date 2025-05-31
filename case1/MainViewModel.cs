@@ -1,10 +1,11 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Media;
 using System.Windows;
 
 namespace case1
 {
+    
     public class MainViewModel : INotifyPropertyChanged
     {
         public ObservableCollection<DeliveryPoint> Points { get; set; } = new();
@@ -26,15 +27,14 @@ namespace case1
         public static MainViewModel Instance { get; private set; }
         public MainViewModel()
         {
-            //добавить точку склада
-
-
             Points = new ObservableCollection<DeliveryPoint>
             {
+
             };
             Instance = this;
             UpdatePath();
             Points.CollectionChanged += (s, e) => UpdatePath();
+            Points.CollectionChanged += (s, e) => UpdateScaledPointsAndPath();
         }
 
         public void AddPoint(DeliveryPoint point)
@@ -59,12 +59,11 @@ namespace case1
         {
             double latRange = maxLat - minLat;
             if (latRange == 0) latRange = 1;
-            // Обратите внимание на инверсию Y
             return ((CanvasHeight - canvasY) / CanvasHeight) * latRange + minLat;
         }
 
 
-        private void UpdateScaledPointsAndPath()
+        public void UpdateScaledPointsAndPath()
         {
             if (Points.Count == 0)
             {
@@ -72,10 +71,10 @@ namespace case1
                 return;
             }
 
-            // Создаём новую коллекцию с масштабированными точками
+
             var scaledPoints = Points.Select(p => new Point(ScaleX(p.Y), ScaleY(p.X))).ToList();
 
-            // Строим PathGeometry по масштабированным точкам
+
             var figure = new PathFigure
             {
                 StartPoint = scaledPoints[0],
@@ -87,12 +86,15 @@ namespace case1
             {
                 figure.Segments.Add(new LineSegment(scaledPoints[i], true));
             }
+            if (scaledPoints.Count > 1)
+            {
+                figure.Segments.Add(new LineSegment(scaledPoints[0], true));
+            }
 
             var geometry = new PathGeometry();
             geometry.Figures.Add(figure);
             PathGeometry = geometry;
 
-            // Обновляем позиции точек в коллекции для отображения (если DeliveryPoint поддерживает изменение координат)
             for (int i = 0; i < Points.Count; i++)
             {
                 Points[i].CanvasX = scaledPoints[i].X -4;
@@ -115,7 +117,7 @@ namespace case1
         }
 
 
-        private void UpdatePath()
+        public void UpdatePath()
         {
             if (Points.Count == 0)
             {
@@ -125,7 +127,7 @@ namespace case1
 
             var figure = new PathFigure
             {
-                StartPoint = new Point(Points[0].X, Points[0].Y ), // центр эллипса
+                StartPoint = new Point(Points[0].X, Points[0].Y ),
                 IsClosed = false,
                 IsFilled = false
             };
@@ -133,15 +135,19 @@ namespace case1
             for (int i = 1; i < Points.Count; i++)
             {
                 figure.Segments.Add(new LineSegment(new Point(Points[i].X , Points[i].Y ), true));
-
             }
-            
+            if (Points.Count > 1)
+            {
+                figure.Segments.Add(new LineSegment(new Point(Points[0].X, Points[0].Y), true));
+            }
+
+
             var geometry = new PathGeometry();
             geometry.Figures.Add(figure);
             
             PathGeometry = geometry;
-        }
 
+        }
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged(string propName)
         {
