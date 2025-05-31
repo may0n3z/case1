@@ -34,6 +34,7 @@ namespace case1
             Instance = this;
             UpdatePath();
             Points.CollectionChanged += (s, e) => UpdatePath();
+            Points.CollectionChanged += (s, e) => UpdateScaledPointsAndPath();
         }
 
         public void AddPoint(DeliveryPoint point)
@@ -58,7 +59,6 @@ namespace case1
         {
             double latRange = maxLat - minLat;
             if (latRange == 0) latRange = 1;
-            // Обратите внимание на инверсию Y
             return ((CanvasHeight - canvasY) / CanvasHeight) * latRange + minLat;
         }
 
@@ -71,10 +71,10 @@ namespace case1
                 return;
             }
 
-            // Создаём новую коллекцию с масштабированными точками
+
             var scaledPoints = Points.Select(p => new Point(ScaleX(p.Y), ScaleY(p.X))).ToList();
 
-            // Строим PathGeometry по масштабированным точкам
+
             var figure = new PathFigure
             {
                 StartPoint = scaledPoints[0],
@@ -86,7 +86,7 @@ namespace case1
             {
                 figure.Segments.Add(new LineSegment(scaledPoints[i], true));
             }
-            for (int i = 1; i < scaledPoints.Count; i++)
+            if (scaledPoints.Count > 1)
             {
                 figure.Segments.Add(new LineSegment(scaledPoints[0], true));
             }
@@ -95,7 +95,6 @@ namespace case1
             geometry.Figures.Add(figure);
             PathGeometry = geometry;
 
-            // Обновляем позиции точек в коллекции для отображения (если DeliveryPoint поддерживает изменение координат)
             for (int i = 0; i < Points.Count; i++)
             {
                 Points[i].CanvasX = scaledPoints[i].X -4;
@@ -128,7 +127,7 @@ namespace case1
 
             var figure = new PathFigure
             {
-                StartPoint = new Point(Points[0].X, Points[0].Y ), // центр эллипса
+                StartPoint = new Point(Points[0].X, Points[0].Y ),
                 IsClosed = false,
                 IsFilled = false
             };

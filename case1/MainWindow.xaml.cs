@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Drawing;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -13,27 +14,32 @@ namespace case1
     
     public partial class MainWindow : Window
     {
+        
         static CalculateRoute cr = new CalculateRoute();
+        
         public MainWindow()
         {
             InitializeComponent();
+            
         }
+        // Получаем точку при нажатии на Canvas
         private void Canvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            
             var vm = MainViewModel.Instance;
             var canvas = sender as Canvas;
             if (canvas == null) return;
-            double id = vm.Points.Count > 0 ? vm.Points.Max(p => p.ID) + 1 : 0;
-            // Получаем позицию клика относительно Canvas
+            double id = vm.Points.Count > 1 ? vm.Points.Max(p => p.ID) + 1 : 0;        
             System.Windows.Point clickPos = e.GetPosition(canvas);
-            // Обратное масштабирование: преобразуем координаты Canvas в "географические"
             double lat = vm.InverseScaleY(clickPos.Y);
             double lon = vm.InverseScaleX(clickPos.X);
             // Добавляем новую точку
-            vm.Points.Add(new DeliveryPoint(lat ,lon, 0.5, id));
-            NewPatch();
-        }
+            vm.AddPoint(new DeliveryPoint(lat ,lon, 0.5, id));
+            vm.UpdateScaledPointsAndPath();
 
+
+        }
+        //Обновление списка позиций точек
         void CalculatePointsAmount(Order[] orders)
         {
             PathLenght.Text = "";
@@ -44,6 +50,7 @@ namespace case1
             }
         }
 
+        //Обновление общего веса пути
         void UpdateWeight(Order[] orders)
         {
             WeightLenght.Text = "";
@@ -52,9 +59,11 @@ namespace case1
             var depot = orders[0].Destination;
             WeightLenght.Text = BestDelivery.RoutingTestLogic.CalculateRouteCost(ordersRoute, ordersNew.ToList(), depot).ToString();
         }
-
+        //Получение и отображение списков заказов по тегам
         private void GetOrder_Click(object sender, RoutedEventArgs e)
         {
+            if (!graph.IsEnabled)
+                graph.IsEnabled = true;
             var vm = MainViewModel.Instance;
             var button = sender as Button;
             if (button == null) return;
@@ -74,44 +83,40 @@ namespace case1
             UpdateWeight(orders);
             CalculatePointsAmount(orders);
             if (orders == null) return; 
-            vm.Points.Clear(); // очищаем старые точки
+            vm.Points.Clear(); 
             foreach (var order in orders)
             {
                 vm.AddPoint(new DeliveryPoint(order.Destination.X, order.Destination.Y, order.Priority, order.ID));               
             }
-            NewPatch();
+            
         }
+        //Пересчет пути на оптимальный после выставления точек
         private void NewPath_Click(object sender, RoutedEventArgs e)
         {
-            NewPatch();
-        }
-        public void NewPatch()
-        {
-
             if (this.DataContext is MainViewModel vm)
             {
+                vm = MainViewModel.Instance;
                 Order[] orders = vm.Points.Select(static point => new BestDelivery.Order
                 {
                     ID = (int)point.ID,
-                    Destination = new BestDelivery.Point { X = point.X, Y = point.Y }, // если тип совпадает!
+                    Destination = new BestDelivery.Point { X = point.X, Y = point.Y },
                     Priority = point.Priority
                 }).ToArray();
-                updatelines(cr.GetMinOrdersPatch(orders), vm.Points);
+
+                UpdateLines(cr.GetMinOrdersPatch(orders));
                 UpdateWeight(orders);
                 CalculatePointsAmount(orders);
             }
         }
 
-        void updatelines(List<int> route, ObservableCollection<DeliveryPoint> points)
+        //Переставление точек для отображения
+        void UpdateLines(List<int> route)
         {
-            // Создаем копию исходной коллекции
-            var oldpoints = new ObservableCollection<DeliveryPoint>(points);
+            //копия исходной коллекции
             var vm = MainViewModel.Instance;
-
-            // Очищаем исходную коллекцию
+            var oldpoints = new ObservableCollection<DeliveryPoint>(vm.Points);
             vm.Points.Clear();
 
-            // Добавляем первое значение без изменений
             if (oldpoints.Count > 0)
             {
                 vm.AddPoint(new DeliveryPoint(
@@ -120,26 +125,18 @@ namespace case1
                     oldpoints[0].Priority,
                     oldpoints[0].ID));
             }
-            for (int i = 1; i < route.Count; i++)
+            for (int i = 0; i < route.Count; i++)
             {
                 int id = route[i];
                 var point = oldpoints.FirstOrDefault(p => p.ID == id);
-                if (point != null && point != oldpoints.First() && point != oldpoints.Last())
+                if (point != null && point.ID != -1)
                 {
                     vm.AddPoint(new DeliveryPoint(point.X, point.Y, point.Priority, point.ID));
                 }
             }
-
-            // Добавляем последнее значение без изменений
-            if (oldpoints.Count > 1)
-            {
-                vm.AddPoint(new DeliveryPoint(
-                    oldpoints[oldpoints.Count - 1].X,
-                    oldpoints[oldpoints.Count - 1].Y,
-                    oldpoints[oldpoints.Count - 1].Priority,
-                    oldpoints[oldpoints.Count - 1].ID));
-            }
         }
+
+
     }
     class CalculateRoute
     {
