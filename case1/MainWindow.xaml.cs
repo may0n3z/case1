@@ -213,47 +213,177 @@ namespace case1
         public List<int> GetMinOrdersPatch(Order[] orders)
         {
             int n = orders.Length;
-            if (n == 0) return (new List<int>());
-            HashSet<int> unvisited = new HashSet<int>(Enumerable.Range(1, n - 1));
-            int current = 0;
-            double totalCost = 0;
-            List<int> route = new List<int> { orders[current].ID }; // начинаем маршрут с ID стартового заказа
-            while (unvisited.Count > 0)
+            if (n == 0) return new List<int>();
+            if (n == 1) return new List<int> { orders[0].ID, orders[0].ID };
+            double[,] dist = new double[n, n];
+            for (int i = 0; i < n; i++)
+                for (int j = 0; j < n; j++)
+                    dist[i, j] = (i == j) ? 0 : BestDelivery.RoutingTestLogic.CalculateDistance(orders[i].Destination, orders[j].Destination);
+            var mstEdges = BuildMST(dist, n);
+            var oddVertices = FindOddDegreeVertices(mstEdges, n);
+            var matchingEdges = MinimumWeightPerfectMatching(oddVertices, dist);
+            var multigraph = CombineGraphs(mstEdges, matchingEdges);
+            var eulerianCircuit = FindEulerianCircuit(multigraph, n);
+            var hamiltonianCycle = EulerToHamiltonian(eulerianCircuit);
+            List<int> route = hamiltonianCycle.Select(i => orders[i].ID).ToList();
+            route.Add(orders[hamiltonianCycle[0]].ID);
+            return route;
+        }
+        private List<(int, int)> BuildMST(double[,] dist, int n)
+        {
+            var mstEdges = new List<(int, int)>();
+            bool[] inMST = new bool[n];
+            double[] key = new double[n];
+            int[] parent = new int[n];
+            for (int i = 0; i < n; i++)
             {
-                double minCost = double.MaxValue;
-                int nextVertex = -1;
-                foreach (int candidate in unvisited)
+                key[i] = double.MaxValue;
+                parent[i] = -1;
+            }
+            key[0] = 0;
+
+            for (int count = 0; count < n - 1; count++)
+            {
+                int u = -1;
+                double minKey = double.MaxValue;
+                for (int v = 0; v < n; v++)
                 {
-                    double dist = BestDelivery.RoutingTestLogic.CalculateDistance(orders[current].Destination, orders[candidate].Destination);
-                    double priorityFactor = 1 * (orders[current].Priority + orders[candidate].Priority) / 2.0;
-                    double cost = dist * priorityFactor;
-                    if (cost < minCost)
+                    if (!inMST[v] && key[v] < minKey)
                     {
-                        minCost = cost;
-                        nextVertex = candidate;
+                        minKey = key[v];
+                        u = v;
                     }
                 }
-                if (nextVertex == -1)
+
+                inMST[u] = true;
+
+                for (int v = 0; v < n; v++)
                 {
-                    break;
+                    if (!inMST[v] && dist[u, v] < key[v])
+                    {
+                        key[v] = dist[u, v];
+                        parent[v] = u;
+                    }
                 }
-                totalCost += minCost;
-                current = nextVertex;
-                unvisited.Remove(nextVertex);
-                route.Add(orders[current].ID); // добавляем ID следующего заказа в маршрут
             }
-            // Возврат к стартовой вершине
-            if (n > 1)
+
+            for (int v = 1; v < n; v++)
             {
-                double distBack = BestDelivery.RoutingTestLogic.CalculateDistance(orders[current].Destination, orders[0].Destination);
-                double priorityFactorBack = 1 * (orders[current].Priority + orders[0].Priority) / 2.0;
-                totalCost += distBack * priorityFactorBack;
-                route.Add(orders[0].ID); // добавляем в конец маршрут возврат к старту
+                mstEdges.Add((parent[v], v));
             }
-            
-            return route;
-            
+
+            return mstEdges;
+        }
+        private List<int> FindOddDegreeVertices(List<(int, int)> edges, int n)
+        {
+            int[] degree = new int[n];
+            foreach (var (u, v) in edges)
+            {
+                degree[u]++;
+                degree[v]++;
+            }
+            var oddVertices = new List<int>();
+            for (int i = 0; i < n; i++)
+                if (degree[i] % 2 == 1)
+                    oddVertices.Add(i);
+            return oddVertices;
+        }
+        private List<(int, int)> MinimumWeightPerfectMatching(List<int> oddVertices, double[,] dist)
+        {
+            var matchingEdges = new List<(int, int)>();
+            var used = new HashSet<int>();
+            oddVertices.Sort(); 
+
+            foreach (int u in oddVertices)
+            {
+                if (used.Contains(u)) continue;
+                double minDist = double.MaxValue;
+                int minV = -1;
+                foreach (int v in oddVertices)
+                {
+                    if (u != v && !used.Contains(v))
+                    {
+                        if (dist[u, v] < minDist)
+                        {
+                            minDist = dist[u, v];
+                            minV = v;
+                        }
+                    }
+                }
+                if (minV != -1)
+                {
+                    matchingEdges.Add((u, minV));
+                    used.Add(u);
+                    used.Add(minV);
+                }
+            }
+            return matchingEdges;
         }
 
+        private Dictionary<int, List<int>> CombineGraphs(List<(int, int)> mstEdges, List<(int, int)> matchingEdges)
+        {
+            var graph = new Dictionary<int, List<int>>();
+            void AddEdge(int u, int v)
+            {
+                if (!graph.ContainsKey(u)) graph[u] = new List<int>();
+                if (!graph.ContainsKey(v)) graph[v] = new List<int>();
+                graph[u].Add(v);
+                graph[v].Add(u);
+            }
+
+            foreach (var (u, v) in mstEdges)
+                AddEdge(u, v);
+            foreach (var (u, v) in matchingEdges)
+                AddEdge(u, v);
+
+            return graph;
+        }
+
+        private List<int> FindEulerianCircuit(Dictionary<int, List<int>> graph, int n)
+        {
+            var circuit = new List<int>();
+            var stack = new Stack<int>();
+            var current = 0;
+            stack.Push(current);
+
+            var localGraph = new Dictionary<int, List<int>>();
+            foreach (var kvp in graph)
+                localGraph[kvp.Key] = new List<int>(kvp.Value);
+
+            while (stack.Count > 0)
+            {
+                current = stack.Peek();
+                if (localGraph.ContainsKey(current) && localGraph[current].Count > 0)
+                {
+                    int next = localGraph[current][0];
+                    localGraph[current].RemoveAt(0);
+                    localGraph[next].Remove(current);
+                    stack.Push(next);
+                }
+                else
+                {
+                    circuit.Add(current);
+                    stack.Pop();
+                }
+            }
+
+            circuit.Reverse();
+            return circuit;
+        }
+
+        private List<int> EulerToHamiltonian(List<int> eulerCircuit)
+        {
+            var visited = new HashSet<int>();
+            var path = new List<int>();
+            foreach (var v in eulerCircuit)
+            {
+                if (!visited.Contains(v))
+                {
+                    visited.Add(v);
+                    path.Add(v);
+                }
+            }
+            return path;
+        }
     }
 }
